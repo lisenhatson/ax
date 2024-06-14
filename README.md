@@ -1,7 +1,7 @@
 ax
 ===
 
-Check out my wiki of Artix Installation [here](https://github.com/LisenHatson/LARBS/wiki)
+Check out my wiki of Artix Installation [here](https://github.com/LisenHatson/ax/wiki)
 
 [larbs.xyz](https://larbs.xyz)
 
