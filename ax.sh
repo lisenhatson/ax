@@ -7,7 +7,7 @@
 ### OPTIONS AND VARIABLES ###
 
 dotfilesrepo="https://github.com/LisenHatson/voidrice.git"
-progsfile="https://raw.githubusercontent.com/LisenHatson/ax/main/progs.csv"
+progsfile="./progs.csv"
 aurhelper="yay"
 repobranch="master"
 export TERM=ansi
@@ -27,6 +27,9 @@ error() {
 welcomemsg() {
 	whiptail --title "Welcome!" \
 		--msgbox "Welcome to Luke's Auto-Rice Bootstrapping Script! [Lisen's Fork]\nThis script will automatically install a fully-featured Linux desktop, which I use as my main machine.\\n\\n-Luke" 10 60
+
+	whiptail --title "progs.csv"
+ 		 --msgbox "You can modify the local progs.csv to install your additional programs, return in next dialog" 8 74
 
 	whiptail --title "Important Note!" --yes-button "All ready!" \
 		--no-button "Return..." \
