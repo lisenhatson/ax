@@ -6,7 +6,7 @@
 
 ### OPTIONS AND VARIABLES ###
 
-dotfilesrepo="https://github.com/LisenHatson/voidrice.git"
+dotfilesrepo="https://github.com/LisenHatson/home.git"
 progsfile="./progs.csv"
 aurhelper="yay"
 repobranch="master"
