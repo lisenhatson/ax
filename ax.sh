@@ -12,6 +12,17 @@ aurhelper="yay"
 repobranch="master"
 export TERM=ansi
 
+rssurls="https://lukesmith.xyz/rss.xml
+https://videos.lukesmith.xyz/feeds/videos.xml?videoChannelId=2 \"~Luke Smith (Videos)\"
+https://www.youtube.com/feeds/videos.xml?channel_id=UC2eYFnH61tmytImy1mTYvhA \"~Luke Smith (YouTube)\"
+https://lindypress.net/rss
+https://notrelated.xyz/rss
+https://landchad.net/rss.xml
+https://based.cooking/index.xml
+https://artixlinux.org/feed.php \"tech\"
+https://www.archlinux.org/feeds/news/ \"tech\"
+https://github.com/LukeSmithxyz/voidrice/commits/master.atom \"~LARBS dotfiles\""
+
 ### FUNCTIONS ###
 
 installpkg() {
@@ -26,14 +37,11 @@ error() {
 
 welcomemsg() {
 	whiptail --title "Welcome!" \
-		--msgbox "Welcome to Luke's Auto-Rice Bootstrapping Script! [Lisen's Fork]\nThis script will automatically install a fully-featured Linux desktop, which I use as my main machine.\\n\\n-Luke" 10 60
-
-	whiptail --title "progs.csv"
- 		 --msgbox "You can modify the local progs.csv to install your additional programs, return in next dialog" 8 74
+		--msgbox "Welcome to Luke's Auto-Rice Bootstrapping Script!\\n\\nThis script will automatically install a fully-featured Linux desktop, which I use as my main machine.\\n\\n-Luke" 10 60
 
 	whiptail --title "Important Note!" --yes-button "All ready!" \
 		--no-button "Return..." \
-		--yesno "Be sure the computer you are using has current pacman updates and refreshed Arch keyrings.\\n\\nIf it does not, the installation of some programs might fail." 8 74
+		--yesno "Be sure the computer you are using has current pacman updates and refreshed Arch keyrings.\\n\\nIf it does not, the installation of some programs might fail." 8 70
 }
 
 getuserandpass() {
@@ -51,30 +59,11 @@ getuserandpass() {
 	done
 }
 
-refreshkeys() {
-        case "$(readlink -f /sbin/init)" in
-        *systemd*)
-                whiptail --infobox "Refreshing Arch Keyring..." 7 40
-                pacman --noconfirm -S archlinux-keyring >/dev/null 2>&1
-                ;;
-        *)
-                whiptail --infobox "Enabling Arch Repositories for more a more extensive software collection..." 7 40
-                pacman --noconfirm --needed -S \
-                        artix-keyring artix-archlinux-support >/dev/null 2>&1
-                grep -q "^\[extra\]" /etc/pacman.conf ||
-                        echo "[extra]
-Include = /etc/pacman.d/mirrorlist-arch" >>/etc/pacman.conf
-                pacman -Sy --noconfirm >/dev/null 2>&1
-                pacman-key --populate archlinux >/dev/null 2>&1
-                ;;
-        esac
-}
-
 usercheck() {
 	! { id -u "$name" >/dev/null 2>&1; } ||
 		whiptail --title "WARNING" --yes-button "CONTINUE" \
 			--no-button "No wait..." \
-			--yesno "The user \`$name\` already exists on this system. LARBS can install for a user already existing, but it will OVERWRITE any conflicting settings/dotfiles on the user account.\\n\\nLARBS will NOT overwrite your user files, documents, videos, etc., so don't worry about that, but only click <CONTINUE> if you don't mind your settings being overwritten.\\n\\nNote also that LARBS will change $name's password to the one you just gave." 14 74
+			--yesno "The user \`$name\` already exists on this system. LARBS can install for a user already existing, but it will OVERWRITE any conflicting settings/dotfiles on the user account.\\n\\nLARBS will NOT overwrite your user files, documents, videos, etc., so don't worry about that, but only click <CONTINUE> if you don't mind your settings being overwritten.\\n\\nNote also that LARBS will change $name's password to the one you just gave." 14 70
 }
 
 preinstallmsg() {
@@ -97,6 +86,26 @@ adduserandpass() {
 	echo "$name:$pass1" | chpasswd
 	unset pass1 pass2
 }
+
+refreshkeys() {
+	case "$(readlink -f /sbin/init)" in
+	*systemd*)
+		whiptail --infobox "Refreshing Arch Keyring..." 7 40
+		pacman --noconfirm -S archlinux-keyring >/dev/null 2>&1
+		;;
+	*)
+		whiptail --infobox "Enabling Arch Repositories for more a more extensive software collection..." 7 40
+		pacman --noconfirm --needed -S \
+			artix-keyring artix-archlinux-support >/dev/null 2>&1
+		grep -q "^\[extra\]" /etc/pacman.conf ||
+			echo "[extra]
+Include = /etc/pacman.d/mirrorlist-arch" >>/etc/pacman.conf
+		pacman -Sy --noconfirm >/dev/null 2>&1
+		pacman-key --populate archlinux >/dev/null 2>&1
+		;;
+	esac
+}
+
 manualinstall() {
 	# Installs $1 manually. Used only for AUR helper here.
 	# Should be run after repodir is created and var is set.
@@ -110,13 +119,13 @@ manualinstall() {
 			sudo -u "$name" git pull --force origin master
 		}
 	cd "$repodir/$1" || exit 1
-	sudo -u "$name" -D "$repodir/$1" \
+	sudo -u "$name" \
 		makepkg --noconfirm -si >/dev/null 2>&1 || return 1
 }
 
 maininstall() {
 	# Installs all needed programs from main repo.
-	whiptail --title "LARBS Installation" --infobox "Installing \`$1\` ($n of $total). $1 $2" 9 74
+	whiptail --title "LARBS Installation" --infobox "Installing \`$1\` ($n of $total). $1 $2" 9 70
 	installpkg "$1"
 }
 
@@ -125,7 +134,7 @@ gitmakeinstall() {
 	progname="${progname%.git}"
 	dir="$repodir/$progname"
 	whiptail --title "LARBS Installation" \
-		--infobox "Installing \`$progname\` ($n of $total) via \`git\` and \`make\`. $(basename "$1") $2" 8 74
+		--infobox "Installing \`$progname\` ($n of $total) via \`git\` and \`make\`. $(basename "$1") $2" 8 70
 	sudo -u "$name" git -C "$repodir" clone --depth 1 --single-branch \
 		--no-tags -q "$1" "$dir" ||
 		{
@@ -140,14 +149,14 @@ gitmakeinstall() {
 
 aurinstall() {
 	whiptail --title "LARBS Installation" \
-		--infobox "Installing \`$1\` ($n of $total) from the AUR. $1 $2" 9 74
+		--infobox "Installing \`$1\` ($n of $total) from the AUR. $1 $2" 9 70
 	echo "$aurinstalled" | grep -q "^$1$" && return 1
 	sudo -u "$name" $aurhelper -S --noconfirm "$1" >/dev/null 2>&1
 }
 
 pipinstall() {
 	whiptail --title "LARBS Installation" \
-		--infobox "Installing the Python package \`$1\` ($n of $total). $1 $2" 9 74
+		--infobox "Installing the Python package \`$1\` ($n of $total). $1 $2" 9 70
 	[ -x "$(command -v "pip")" ] || installpkg python-pip >/dev/null 2>&1
 	yes | pip install "$1"
 }
@@ -275,16 +284,16 @@ preinstallmsg || error "User exited."
 
 # Refresh Arch keyrings.
 refreshkeys ||
-        error "Error automatically refreshing Arch keyring. Consider doing so manually."
+	error "Error automatically refreshing Arch keyring. Consider doing so manually."
 
-for x in curl ca-certificates base-devel git ntp zsh; do
+for x in curl ca-certificates base-devel git ntp zsh dash; do
 	whiptail --title "LARBS Installation" \
-		--infobox "Installing \`$x\` which is required to install and configure other programs." 8 74
+		--infobox "Installing \`$x\` which is required to install and configure other programs." 8 70
 	installpkg "$x"
 done
 
 whiptail --title "LARBS Installation" \
-	--infobox "Synchronizing system time to ensure successful and secure installation of software..." 8 74
+	--infobox "Synchronizing system time to ensure successful and secure installation of software..." 8 70
 ntpd -q -g >/dev/null 2>&1
 
 adduserandpass || error "Error adding username and/or password."
@@ -302,7 +311,7 @@ grep -q "ILoveCandy" /etc/pacman.conf || sed -i "/#VerbosePkgLists/a ILoveCandy"
 sed -Ei "s/^#(ParallelDownloads).*/\1 = 5/;/^#Color$/s/#//" /etc/pacman.conf
 
 # Use all cores for compilation.
-# sed -i "s/-j2/-j$(nproc)/;/^#MAKEFLAGS/s/^#//" /etc/makepkg.conf
+sed -i "s/-j2/-j$(nproc)/;/^#MAKEFLAGS/s/^#//" /etc/makepkg.conf
 
 manualinstall $aurhelper || error "Failed to install AUR helper."
 
@@ -320,6 +329,10 @@ installationloop
 putgitrepo "$dotfilesrepo" "/home/$name" "$repobranch"
 rm -rf "/home/$name/.git/" "/home/$name/README.md" "/home/$name/LICENSE" "/home/$name/FUNDING.yml"
 
+# Write urls for newsboat if it doesn't already exist
+[ -s "/home/$name/.config/newsboat/urls" ] ||
+	sudo -u "$name" echo "$rssurls" > "/home/$name/.config/newsboat/urls"
+
 # Install vim plugins if not alread present.
 [ ! -f "/home/$name/.config/nvim/autoload/plug.vim" ] && vimplugininstall
 
@@ -332,6 +345,9 @@ chsh -s /bin/zsh "$name" >/dev/null 2>&1
 sudo -u "$name" mkdir -p "/home/$name/.cache/zsh/"
 sudo -u "$name" mkdir -p "/home/$name/.config/abook/"
 sudo -u "$name" mkdir -p "/home/$name/.config/mpd/playlists/"
+
+# Make dash the default #!/bin/sh symlink.
+ln -sfT /bin/dash /bin/sh >/dev/null 2>&1
 
 # dbus UUID must be generated for Artix runit.
 dbus-uuidgen >/var/lib/dbus/machine-id
