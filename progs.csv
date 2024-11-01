@@ -2,7 +2,7 @@
 ,xorg-server,"is the graphical server. This first one may take a while as it pulls many other dependencies first on clean installs."
 ,xorg-xwininfo,"allows querying information about windows."
 ,xorg-xinit,"starts the graphical server."
-,xf86-video-intel,"Intel video driver"
+,xorg-xset,"Xorg Adjust"
 ,redshift,"Adjust color temperature"
 ,polkit,"manages user policies."
 ,libertinus-font,"provides the sans and serif fonts for LARBS."
