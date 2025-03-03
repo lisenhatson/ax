@@ -5,6 +5,8 @@ Check out my wiki of Artix Installation [here](https://github.com/LisenHatson/ax
 
 [larbs.xyz](https://larbs.xyz)
 
+![show](./oo.png)
+
 ## Installation:
 
 On an Arch-based distribution as root, run the following:
