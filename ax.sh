@@ -210,49 +210,6 @@ makeuserjs(){
 	[ ! -f "$arkenfox" ] && curl -sL "https://raw.githubusercontent.com/arkenfox/user.js/master/user.js" > "$arkenfox"
 	cat "$arkenfox" "$overrides" > "$userjs"
 	chown "$name:wheel" "$arkenfox" "$userjs"
-	# Install the updating script.
-	mkdir -p /usr/local/lib /etc/pacman.d/hooks
-	cp "/home/$name/.local/bin/arkenfox-auto-update" /usr/local/lib/
-	chown root:root /usr/local/lib/arkenfox-auto-update
-	chmod 755 /usr/local/lib/arkenfox-auto-update
-	# Trigger the update when needed via a pacman hook.
-	echo "[Trigger]
-Operation = Upgrade
-Type = Package
-Target = firefox
-Target = librewolf
-Target = librewolf-bin
-[Action]
-Description=Update Arkenfox user.js
-When=PostTransaction
-Depends=arkenfox-user.js
-Exec=/usr/local/lib/arkenfox-auto-update" > /etc/pacman.d/hooks/arkenfox.hook
-}
-
-installffaddons(){
-	addonlist="ublock-origin decentraleyes istilldontcareaboutcookies vim-vixen"
-	addontmp="$(mktemp -d)"
-	trap "rm -fr $addontmp" HUP INT QUIT TERM PWR EXIT
-	IFS=' '
-	sudo -u "$name" mkdir -p "$pdir/extensions/"
-	for addon in $addonlist; do
-		if [ "$addon" = "ublock-origin" ]; then
-			addonurl="$(curl -sL https://api.github.com/repos/gorhill/uBlock/releases/latest | grep -E 'browser_download_url.*\.firefox\.xpi' | cut -d '"' -f 4)"
-		else
-			addonurl="$(curl --silent "https://addons.mozilla.org/en-US/firefox/addon/${addon}/" | grep -o 'https://addons.mozilla.org/firefox/downloads/file/[^"]*')"
-		fi
-		file="${addonurl##*/}"
-		sudo -u "$name" curl -LOs "$addonurl" > "$addontmp/$file"
-		id="$(unzip -p "$file" manifest.json | grep "\"id\"")"
-		id="${id%\"*}"
-		id="${id##*\"}"
-		mv "$file" "$pdir/extensions/$id.xpi"
-	done
-	chown -R "$name:$name" "$pdir/extensions"
-	# Fix a Vim Vixen bug with dark mode not fixed on upstream:
-	sudo -u "$name" mkdir -p "$pdir/chrome"
-	[ ! -f  "$pdir/chrome/userContent.css" ] && sudo -u "$name" echo ".vimvixen-console-frame { color-scheme: light !important; }
-#category-more-from-mozilla { display: none !important }" > "$pdir/chrome/userContent.css"
 }
 
 finalize() {
@@ -331,7 +288,7 @@ rm -rf "/home/$name/.git/" "/home/$name/README.md" "/home/$name/LICENSE" "/home/
 
 # Write urls for newsboat if it doesn't already exist
 [ -s "/home/$name/.config/newsboat/urls" ] ||
-	sudo -u "$name" echo "$rssurls" > "/home/$name/.config/newsboat/urls"
+ 	echo "$rssurls" | sudo -u "$name" tee "/home/$name/.config/newsboat/urls" >/dev/null
 
 # Install vim plugins if not alread present.
 [ ! -f "/home/$name/.config/nvim/autoload/plug.vim" ] && vimplugininstall
@@ -355,7 +312,8 @@ ln -sfT /bin/dash /bin/sh >/dev/null 2>&1
 dbus-uuidgen >/var/lib/dbus/machine-id
 
 # Use system notifications for Brave on Artix
-echo "export \$(dbus-launch)" >/etc/profile.d/dbus.sh
+# Only do it when systemd is not present
+[ "$(readlink -f /sbin/init)" != "/usr/lib/systemd/systemd" ] && echo "export \$(dbus-launch)" >/etc/profile.d/dbus.sh
 
 # Enable tap to click
 [ ! -f /etc/X11/xorg.conf.d/40-libinput.conf ] && printf 'Section "InputClass"
@@ -381,8 +339,6 @@ profile="$(sed -n "/Default=.*.default-default/ s/.*=//p" "$profilesini")"
 pdir="$browserdir/$profile"
 
 [ -d "$pdir" ] && makeuserjs
-
-[ -d "$pdir" ] && installffaddons
 
 # Kill the now unnecessary librewolf instance.
 pkill -u "$name" librewolf
