@@ -1,5 +1,5 @@
 # ax
-===
+
 #### This is my very personalized automated installation script for my machines. Stripped version of [LARBS](https://larbs.xyz)
 --------
 
