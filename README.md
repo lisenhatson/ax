@@ -3,6 +3,8 @@ ax
 
 Check out my wiki of Artix Installation [here](https://github.com/LisenHatson/ax/wiki)
 
+This is my very personalized automated installation script for my machines.
+
 [larbs.xyz](https://larbs.xyz)
 
 ![show](./oo.png)
