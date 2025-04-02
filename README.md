@@ -3,11 +3,6 @@
 #### This is my very personalized automated installation script for my machines. Stripped version of [LARBS](https://larbs.xyz)
 --------
 
-
-![show](./oo.png)
-
---------
-
 ## Installation:
 
 Check out my wiki of Artix Installation [here](https://github.com/LisenHatson/ax/wiki)

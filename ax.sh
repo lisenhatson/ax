@@ -6,6 +6,7 @@
 
 ### OPTIONS AND VARIABLES ###
 
+INTELPKG="mesa xf86-video-intel vulkan-intel libva-intel-driver intel-media-driver"
 dotfilesrepo="https://github.com/LisenHatson/home.git"
 progsfile="./progs.csv"
 aurhelper="yay"
@@ -123,11 +124,27 @@ manualinstall() {
 		makepkg --noconfirm -si >/dev/null 2>&1 || return 1
 }
 
+
+Install_cpu_drivers() {
+    whiptail --title "LARBS Installation" --infobox "Installing CPU drivers for $CPU_VENDOR..." 9 70
+    CPU_VENDOR=$(cat /proc/cpuinfo | grep -m 1 'vendor_id' | awk '{print $3}')
+    echo "Detected CPU: $CPU_VENDOR"
+
+    if [[ "$CPU_VENDOR" == "GenuineIntel" ]]; then
+        installpkg
+    elif [[ "$CPU_VENDOR" == "AuthenticAMD" ]]; then
+        installpkg "mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver"
+    else
+        echo "Unknown CPU vendor. Skipping GPU driver installation."
+    fi
+}
+
 maininstall() {
 	# Installs all needed programs from main repo.
 	whiptail --title "LARBS Installation" --infobox "Installing \`$1\` ($n of $total). $1 $2" 9 70
 	installpkg "$1"
 }
+
 
 gitmakeinstall() {
 	progname="${1##*/}"
