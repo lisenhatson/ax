@@ -6,8 +6,7 @@
 
 ### OPTIONS AND VARIABLES ###
 
-INTELPKG="mesa xf86-video-intel vulkan-intel libva-intel-driver intel-media-driver"
-dotfilesrepo="https://github.com/LisenHatson/home.git"
+dotfilesrepo="https://github.com/LisenHatson/ghome.git"
 progsfile="./progs.csv"
 aurhelper="yay"
 repobranch="master"
@@ -124,27 +123,45 @@ manualinstall() {
 		makepkg --noconfirm -si >/dev/null 2>&1 || return 1
 }
 
-
-Install_cpu_drivers() {
-    whiptail --title "LARBS Installation" --infobox "Installing CPU drivers for $CPU_VENDOR..." 9 70
-    CPU_VENDOR=$(cat /proc/cpuinfo | grep -m 1 'vendor_id' | awk '{print $3}')
-    echo "Detected CPU: $CPU_VENDOR"
-
-    if [[ "$CPU_VENDOR" == "GenuineIntel" ]]; then
-        installpkg
-    elif [[ "$CPU_VENDOR" == "AuthenticAMD" ]]; then
-        installpkg "mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver"
-    else
-        echo "Unknown CPU vendor. Skipping GPU driver installation."
-    fi
-}
-
 maininstall() {
 	# Installs all needed programs from main repo.
 	whiptail --title "LARBS Installation" --infobox "Installing \`$1\` ($n of $total). $1 $2" 9 70
 	installpkg "$1"
 }
 
+driverinstall() {
+    whiptail --title "LARBS Installation" --infobox "Installing CPU drivers..." 9 70
+    CPU_VENDOR=$(grep -m 1 'vendor_id' /proc/cpuinfo | awk '{print $3}')
+    mkdir -p /etc/X11/xorg.conf.d/
+
+    if [ "$CPU_VENDOR" = "GenuineIntel" ]; then
+        for pkg in intel-ucode mesa xf86-video-intel vulkan-intel libva-intel-driver intel-media-driver libva-utils vulkan-tools mesa-utils; do
+            maininstall "$pkg" "Intel graphics driver"
+        done
+        cat <<'EOF' > /etc/X11/xorg.conf.d/20-intel.conf
+Section "Device"
+    Identifier  "Intel Graphics"
+    Driver      "Intel"
+    Option      "TearFree"  "True"
+EndSection
+EOF
+
+    elif [ "$CPU_VENDOR" = "AuthenticAMD" ]; then
+        for pkg in amd-ucode mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver libva-utils vulkan-tools mesa-utils; do
+            maininstall "$pkg" "AMD graphics driver"
+        done
+        cat <<'EOF' > /etc/X11/xorg.conf.d/20-amdgpu.conf
+Section "Device"
+    Identifier  "AMD"
+    Driver      "amdgpu"
+    Option      "TearFree"  "True"
+EndSection
+EOF
+
+    else
+        echo "Unknown CPU vendor. Skipping GPU driver installation."
+    fi
+}
 
 gitmakeinstall() {
 	progname="${1##*/}"
@@ -291,6 +308,9 @@ manualinstall $aurhelper || error "Failed to install AUR helper."
 
 # Make sure .*-git AUR packages get updated automatically.
 $aurhelper -Y --save --devel
+
+# Lisen's, install correct CPU drivers.
+driverinstall
 
 # The command that does all the installing. Reads the progs.csv file and
 # installs each needed program the way required. Be sure to run this only after
