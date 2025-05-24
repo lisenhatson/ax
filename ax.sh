@@ -100,6 +100,9 @@ refreshkeys() {
 		grep -q "^\[extra\]" /etc/pacman.conf ||
 			echo "[extra]
 Include = /etc/pacman.d/mirrorlist-arch" >>/etc/pacman.conf
+		grep -q "^\[multilib\]" /etc/pacman.conf ||
+			echo "[multilib]
+Include = /etc/pacman.d/mirrorlist-arch" >>/etc/pacman.conf
 		pacman -Sy --noconfirm >/dev/null 2>&1
 		pacman-key --populate archlinux >/dev/null 2>&1
 		;;
@@ -300,6 +303,7 @@ Defaults:%wheel,root runcwd=*" >/etc/sudoers.d/larbs-temp
 # Make pacman colorful, concurrent downloads and Pacman eye-candy.
 grep -q "ILoveCandy" /etc/pacman.conf || sed -i "/#VerbosePkgLists/a ILoveCandy" /etc/pacman.conf
 sed -Ei "s/^#(ParallelDownloads).*/\1 = 5/;/^#Color$/s/#//" /etc/pacman.conf
+sed -Ei '/^\s*#\s*\[lib32\]/s/^#\s*//;/^\s*#\s*Include = \/etc\/pacman\.d\/mirrorlist/s/^#\s*//' /etc/pacman.conf
 
 # Use all cores for compilation.
 sed -i "s/-j2/-j$(nproc)/;/^#MAKEFLAGS/s/^#//" /etc/makepkg.conf
